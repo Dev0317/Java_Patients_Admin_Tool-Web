@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script type="text/javascript">
+
+        function loadPatientList(data) {
+            var str = data;
+            var res = str.split(",");
+            var i;
+            for (i = 0; i < res.length - 1; i++) {
+                document.getElementById("td" + i).innerHTML = res[i];
+            }
+        }
+
+        function loadstats(data) {
+            var str = data;
+            var datasets = str.split("/");
+
+            var res = datasets[0].split(",");
+            var i;
+            var list = document.getElementById("myList");
+            for (i = 0; i < res.length - 1; i++) {
+                var pair = res[i].split(":");
+                var newItem = document.createElement("LI");
+                var btn = document.createElement("BUTTON");
+                btn.innerHTML = pair[0]
+                btn.setAttribute("id", pair[1]);
+                btn.setAttribute("class", "foo");
+                newItem.appendChild(btn);
+                list.appendChild(newItem);
+            }
+
+            var stats = datasets[1].split("!");
+            var columnNames = stats[0].split(",");
+            var table = document.getElementById("my2ndTable");
+
+            var j;
+            var tr1 = document.createElement("TR");
+            for (j = 0; j < columnNames.length - 1; j++) {
+                var th = document.createElement("TH");
+                th.innerHTML = columnNames[j];
+                tr1.appendChild(th);
+            }
+            table.appendChild(tr1);
+
+            var k;
+            for (k = 1; k < stats.length; k++) {
+                var tr = document.createElement("TR");
+                var record = stats[k].split(",");
+                var l;
+                for (l = 0; l < record.length - 1; l++) {
+                    var td = document.createElement("TD");
+                    td.innerHTML = record[l];
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+        }
+
+        $(document).ready(function () {
+            function loadajax(){
+                   $.post('/test',   // url
+                   { loaded: '' }, // data to be submit
+                   function(data, status, jqXHR) {// success callback
+                            loadstats(data)
+                            $('.foo').click(function(){
+                                $.post('/test',   // url
+                                { patient: $(this).attr("id") }, // data to be submit
+                                function(data, status, jqXHR) {// success callback
+                                    loadPatientList(data);
+                                });
+                            });
+
+                            $('#myButton').click(function(){
+                                var requestBody = $('#myTextField').val();
+                                var i;
+                                for (i = 1; i < 21; i++) {
+                                    if ($('#checkbox' + i).is(":checked")) {
+                                        requestBody = requestBody + "," + $('#checkbox' + i).val();
+                                    }
+                                }
+
+                                $.post('/test',   // url
+                                { search: requestBody }, // data to be submit
+                                function(data, status, jqXHR) {// success callback
+                                    $("#myList").empty()
+                                    $("#my2ndTable").empty()
+                                    loadstats(data)
+                                    $('.foo').click(function(){
+                                        $.post('/test',   // url
+                                        { patient: $(this).attr("id") }, // data to be submit
+                                        function(data, status, jqXHR) {// success callback
+                                            loadPatientList(data);
+                                        });
+                                     });
+                                });
+                            });
+                   });
+            };
+
+            setTimeout(function(){
+                loadajax();
+            }, 0);
+        });
+    </script>
+
+    <style>
+
+        html, body {
+            width = 100%;
+            height = 100%;
+            margin = 0;
+        }
+
+        div {
+            overflow: scroll;
+            max-height: 500px;
+        }
+
+        #formContainer {
+            height: 20%;
+            width: 100%;
+        }
+
+        #listContainer {
+            height: 80%;
+            width: 30%;
+            float: left;
+        }
+
+        #infoContainer {
+            height: 80%;
+            width: 70%;
+            float: left;
+        }
+
+        #dataContainer {
+            height: 50%;
+            width: 100%;
+        }
+
+        #statsContainer {
+            height: 50%;
+            width: 100%;
+        }
+
+    </style>
+
+</head>
+<body>
+
+<div id="formContainer">
+    <form id="myForm">
+
+        <input type="text" name="searchKey" id="myTextField">
+        <button type="button" id="myButton">Search</button>
+
+        <input type="checkbox" name="searchField" id="checkbox1" value="Id">Id
+        <input type="checkbox" name="searchField" id="checkbox2" value="Birthdate">Birthdate
+        <input type="checkbox" name="searchField" id="checkbox3" value="Deathdate">Deathdate
+        <input type="checkbox" name="searchField" id="checkbox4" value="Ssn">Ssn
+        <input type="checkbox" name="searchField" id="checkbox5" value="Drivers">Drivers<br>
+        <input type="checkbox" name="searchField" id="checkbox6" value="Passport">Passport
+        <input type="checkbox" name="searchField" id="checkbox7" value="Prefix">Prefix
+        <input type="checkbox" name="searchField" id="checkbox8" value="First">First
+        <input type="checkbox" name="searchField" id="checkbox9" value="Last">Last
+        <input type="checkbox" name="searchField" id="checkbox10" value="Suffix">Suffix<br>
+        <input type="checkbox" name="searchField" id="checkbox11" value="Maiden">Maiden
+        <input type="checkbox" name="searchField" id="checkbox12" value="Marital">Marital
+        <input type="checkbox" name="searchField" id="checkbox13" value="Ethnicity">Ethnicity
+        <input type="checkbox" name="searchField" id="checkbox14" value="Gender">Gender
+        <input type="checkbox" name="searchField" id="checkbox15" value="Race">Race<br>
+        <input type="checkbox" name="searchField" id="checkbox16" value="Birthplace">Birthplace
+        <input type="checkbox" name="searchField" id="checkbox17" value="Address">Address
+        <input type="checkbox" name="searchField" id="checkbox18" value="City">City
+        <input type="checkbox" name="searchField" id="checkbox19" value="State">State
+        <input type="checkbox" name="searchField" id="checkbox20" value="Zip">Zip<br>
+
+    </form>
+</div>
+
+<div id="listContainer">
+    <ul id="myList">
+    </ul>
+</div>
+
+<div id="infoContainer">
+    <div id="dataContainer">
+        <table id="myTable">
+            <tr>
+                <th>Id</th>
+                <th>Birthdate</th>
+                <th>Deathdate</th>
+                <th>Ssn</th>
+                <th>Drivers</th>
+                <th>Passport</th>
+                <th>Prefix</th>
+                <th>First</th>
+                <th>Last</th>
+                <th>Suffix</th>
+                <th>Maiden</th>
+                <th>Marital</th>
+                <th>Ethnicity</th>
+                <th>Gender</th>
+                <th>Race</th>
+                <th>Birthplace</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Zip</th>
+            </tr>
+            <tr>
+                <td id="td0">n/a</td>
+                <td id="td1">n/a</td>
+                <td id="td2">n/a</td>
+                <td id="td3">n/a</td>
+                <td id="td4">n/a</td>
+                <td id="td5">n/a</td>
+                <td id="td6">n/a</td>
+                <td id="td7">n/a</td>
+                <td id="td8">n/a</td>
+                <td id="td9">n/a</td>
+                <td id="td10">n/a</td>
+                <td id="td11">n/a</td>
+                <td id="td12">n/a</td>
+                <td id="td13">n/a</td>
+                <td id="td14">n/a</td>
+                <td id="td15">n/a</td>
+                <td id="td16">n/a</td>
+                <td id="td17">n/a</td>
+                <td id="td18">n/a</td>
+                <td id="td19">n/a</td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="statsContainer">
+        <table id="my2ndTable">
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
